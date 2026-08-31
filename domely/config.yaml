@@ -1,0 +1,88 @@
+# The add-on manifest. The supervisor reads this file to decide what to show in the store, what to
+# ask the operator for, what the container is allowed to do and which image to pull.
+#
+# https://developers.home-assistant.io/docs/apps/configuration
+
+name: Domely
+# For an add-on the version is the image tag, and bumping it is what a user sees as an update. The
+# repository root's VERSION file is the single source and deploy/addon/test.sh fails the build when
+# this line, VERSION, both changelogs and the image tags in deploy/standalone drift apart.
+version: "0.1.0"
+slug: domely
+description: Share a simple, premium app for your home with the people who live in it
+url: https://github.com/raymonbb/domely-addons
+# The two architectures Home Assistant supports. The three 32-bit identifiers the supervisor still
+# parses are deprecated, no image is built for them, and deploy/addon/test.sh fails the build if one
+# turns up here or in the Dockerfile. https://github.com/home-assistant/docker-base
+arch:
+  - aarch64
+  - amd64
+
+# The image is built from the repository root rather than from this folder, because it assembles
+# the same three components deploy/standalone ships and they live above this directory. So it is
+# pulled rather than built on the machine, which is how add-ons are meant to ship anyway.
+image: ghcr.io/raymonbb/domely-addon
+
+# Started after Home Assistant, which is what `application` means and also the supervisor's
+# default. Load-bearing rather than decorative: the adapter treats a Home Assistant that does not
+# answer its very first connection as fatal, printing why and stopping, so an add-on that started
+# before Core would stop itself on every boot.
+startup: application
+
+# The base image's entrypoint is already s6-overlay's /init, and under s6 v3 a second init means
+# the container does not start at all ("s6-overlay-suexec: fatal: can only run as pid 1").
+init: false
+
+# The supervisor proxies Home Assistant at http://supervisor/core with the token it injects, and
+# refuses the WebSocket handshake without this. It is the whole credential story of this topology:
+# the operator creates no long-lived token and nothing in the options names one.
+homeassistant_api: true
+
+# The sidebar entry. It opens one small page the API layer serves at GET /ingress, which links to
+# this home's admin screen in the Domely app: the administrator's screens are part of the app the
+# cloud serves, not a second admin UI inside the Agent (ADR-0009, ADR-0010).
+#
+# 8080 rather than the 8099 default: that port is the adapter's internal channel in both
+# topologies, and the process ingress has to reach is the API layer. Nothing is published to the
+# host either way, `ports` is absent and host_network is off: the way in from outside is the
+# tunnel, and this page is refused at its edge.
+ingress: true
+ingress_port: 8080
+# Where in the API layer the sidebar lands. The supervisor builds the panel URL by appending this
+# to a prefix that already ends in a slash, and hands the add-on whatever follows that prefix, so
+# it is written without one: a leading slash here arrives as a doubled one there.
+ingress_entry: ingress
+panel_icon: mdi:home-heart
+
+# The whole of /data is what a per-add-on backup captures, and everything durable is named into it
+# by the Dockerfile for exactly that reason. Hot, so the house keeps working while the backup runs.
+# The pre-hook checkpoints the WAL and writes the publish configuration next to the database as a
+# readable export (#53). There is no post-hook because the pre-hook takes no lock and holds nothing
+# open, so there is nothing to release.
+backup: hot
+backup_pre: /usr/bin/domely-backup-pre
+
+# Seconds the supervisor waits for the container to stop before killing it. Longer than the
+# default ten because cloudflared drains its connections on the way out, and s6 is told to allow
+# the same fifteen seconds for it. See S6_SERVICES_GRACETIME in the Dockerfile.
+timeout: 20
+
+# Everything an operator can reasonably set, and nothing else. The rest is in the Dockerfile, where
+# it cannot be got wrong: the paths under /data, the loopback addresses the two halves of the
+# internal channel meet on, and the shared secret, which is generated on first start.
+options:
+  log_level: info
+  api_threads: 8
+schema:
+  # Required, and with no default here on purpose: a hostname belongs in nobody's repository.
+  cloud_url: str
+  home_name: str?
+  log_level: list(debug|info|warn|error)
+  # The entity the adapter switches on and off once at startup to prove the connection works.
+  # Blank skips it, which is why it is optional rather than defaulted to somebody's light.
+  test_light_entity: str?
+  # One FrankenPHP thread is held per open event-stream connection, so this is sized for the
+  # number of phones in the house rather than the number of people. See ADR-0005.
+  api_threads: int(1,64)
+  # Blank means the origin of cloud_url, which is where the app is served from.
+  cors_origins: str?

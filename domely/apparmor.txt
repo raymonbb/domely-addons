@@ -1,0 +1,56 @@
+# The AppArmor profile the supervisor loads for this add-on. Its name has to be the slug, or it is
+# not applied at all. https://developers.home-assistant.io/docs/apps/presentation
+
+#include <tunables/global>
+
+profile domely flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # Deliberately not a path allow-list. This container runs three runtimes with their own idea of
+  # which files they touch (Node, FrankenPHP with PHP embedded, and cloudflared), and a list of
+  # paths that has never been run against a real supervisor fails closed on the first one it
+  # missed, which is an add-on that will not start rather than an add-on that is contained. What
+  # this profile is for is the rest: no capabilities beyond the ones named here, no mounting, no
+  # ptrace of anything outside it, and signals only to its own processes. Tightening the file
+  # rules is a job for someone with a HAOS to run the documented complain-mode loop against.
+  file,
+  network,
+  signal (send,receive) peer=domely,
+  signal (send) set=(kill,term,int,hup,cont),
+
+  capability setuid,
+  capability setgid,
+  capability dac_override,
+  capability chown,
+  capability fowner,
+
+  deny @{PROC}/@{pid}/mem rwklx,
+  deny @{PROC}/sysrq-trigger rwklx,
+  deny @{PROC}/kcore rwklx,
+  deny mount,
+  deny /sys/[^f]*/** wklx,
+  deny /sys/f[^s]*/** wklx,
+  deny /sys/fs/[^c]*/** wklx,
+  deny /sys/fs/c[^g]*/** wklx,
+  deny /sys/fs/cg[^r]*/** wklx,
+  deny /sys/firmware/** rwklx,
+  deny /sys/kernel/security/** rwklx,
+
+  # s6-overlay is pid 1 here and starts everything else, so its own tree and the scripts it runs
+  # have to stay executable. https://developers.home-assistant.io/docs/apps/presentation
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /usr/local/bin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/s6-overlay/s6-rc.d/** rix,
+  /usr/lib/bashio/** ix,
+  /run/{,**} rwk,
+  /tmp/** rwk,
+  /dev/tty rw,
+
+  # The options the supervisor writes, and everything the Agent keeps.
+  /data/** rw,
+}

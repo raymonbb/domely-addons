@@ -1,0 +1,124 @@
+# Standalone topology, as it ships. Runs the published images rather than a mount, so what runs
+# here is the artifact and not the working copy. The development loop is compose.yml in the root.
+#
+# This file and .env.example are the whole install: copy the pair into a directory of your own,
+# fill in .env, and nothing else from this repository is needed. That is why there is no build:
+# stanza here and no path pointing back into the checkout. Building the images locally instead is
+# compose.build.yml beside this file, which adds exactly those stanzas back (#58).
+#
+# The tags are the version in the repository root's VERSION file, and that file is the single
+# source: CHANGELOG.md, deploy/addon/config.yaml and these three lines all have to agree with it.
+# Nothing has been pushed yet, so they do not resolve from any registry until the first release is
+# cut. Until then it is the local build that works. See README.md.
+
+services:
+  adapter:
+    image: ghcr.io/raymonbb/domely-adapter:0.1.0
+    env_file: .env
+    environment:
+      # Reachable by service name from the API container, which is what this topology needs, and
+      # in no ports: mapping, here or anywhere, so it never reaches the host. The add-on runs both
+      # processes in one network namespace and keeps the 127.0.0.1 default. See ADR-0004.
+      ADAPTER_BIND: 0.0.0.0
+    volumes:
+      - agent-data:/var/lib/domely
+      - agent-tunnel:/var/lib/domely-tunnel
+    restart: unless-stopped
+    stop_grace_period: 5s
+
+  api:
+    image: ghcr.io/raymonbb/domely-api:0.1.0
+    environment:
+      # One thread is held per open event-stream connection from M4 onwards. See ADR-0005.
+      FRANKENPHP_CONFIG: num_threads ${API_THREADS:-8}
+      ADAPTER_URL: http://adapter:8099
+      # The same secret the adapter reads from .env. Unset fails here rather than starting a stack
+      # whose internal channel anything on the Docker network can drive.
+      ADAPTER_SECRET: ${ADAPTER_SECRET:?set ADAPTER_SECRET in deploy/standalone/.env, see .env.example}
+      HOME_NAME: ${HOME_NAME:-Home}
+      # How long the startup check waits for the adapter to bind. Documented as tunable,
+      # so it has to actually reach the container that reads it.
+      CHANNEL_CHECK_WAIT: ${CHANNEL_CHECK_WAIT:-10}
+      # The same threshold the adapter logs against, so the log and GET /health cannot
+      # disagree about when a grant set has gone stale.
+      GRANTS_STALE_AFTER: ${GRANTS_STALE_AFTER:-900}
+      # The file the adapter wrote the tunnel credentials to. domely:unpair deletes it, so an
+      # override that reached only the adapter would leave an unpaired Agent with a raisable
+      # tunnel: it is one file and both processes have to be told the same name for it.
+      TUNNEL_CREDENTIALS_PATH: ${TUNNEL_CREDENTIALS_PATH:-/var/lib/domely-tunnel/tunnel-credentials.json}
+      # Seconds of clock skew allowed on a token. Documented as tunable, so it has to actually
+      # reach the container that reads it.
+      JWT_LEEWAY: ${JWT_LEEWAY:-60}
+      # The events table and the streams that tail it (ADR-0008). All four are documented as
+      # tunable, so they have to actually reach the container that reads them, and the lifetime
+      # is sized together with the thread count: one thread is held per open stream.
+      EVENTS_RETENTION: ${EVENTS_RETENTION:-60}
+      EVENT_STREAM_POLL_MS: ${EVENT_STREAM_POLL_MS:-200}
+      EVENT_STREAM_HEARTBEAT: ${EVENT_STREAM_HEARTBEAT:-15}
+      EVENT_STREAM_MAX_SECONDS: ${EVENT_STREAM_MAX_SECONDS:-300}
+      # Browser origins allowed to call this API. Unset means none of them, which is the safe
+      # default and also means the app cannot reach this Agent from a browser at all: a deployment
+      # whose app has to work names the origin it is served from here.
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    # Loopback only, deliberately. Auth is always on, and the way in from outside is the tunnel
+    # (#34, #35), which terminates here. Nothing else on the network needs to reach this port.
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    volumes:
+      - agent-data:/var/lib/domely
+      - agent-tunnel:/var/lib/domely-tunnel
+    restart: unless-stopped
+    stop_grace_period: 5s
+
+  tunnel:
+    image: ghcr.io/raymonbb/domely-tunnel:0.1.0
+    # The API container's network namespace, so cloudflared reaches the API layer at
+    # 127.0.0.1:8080: the same address it has in the add-on, where the two run in one container.
+    # One cloud provisions the ingress for both topologies from one CLOUD_TUNNEL_SERVICE, so that
+    # address has to mean the same thing in each. It also puts nothing new on the compose network:
+    # the tunnel reaches exactly what the API reaches, and the adapter's channel is not routed
+    # because the ingress does not name it.
+    #
+    # Recreating api recreates this with it, which `docker compose up` does on its own. A plain
+    # restart of api does not: this container keeps running with a network namespace that is gone,
+    # and cloudflared retries into it rather than exiting. run-tunnel.sh watches the API layer for
+    # exactly that and exits, so the restart policy below rejoins the live namespace.
+    network_mode: "service:api"
+    depends_on:
+      - api
+    environment:
+      # The file the adapter writes at pairing. This container raises nothing until it is there,
+      # so an unpaired Agent is publicly reachable at no address at all.
+      TUNNEL_CREDENTIALS_PATH: ${TUNNEL_CREDENTIALS_PATH:-/var/lib/domely-tunnel/tunnel-credentials.json}
+    volumes:
+      # The credentials and nothing else. All three containers run as uid 1000, so :ro on the data
+      # volume would not have kept this one out of domely.sqlite, and that file holds the agent
+      # token in plaintext, the grant set and every Home Assistant entity ID: the mapping principle
+      # 1 says lives only in the Agent. The one process reachable from the internet gets the one
+      # file it needs. Read-only on top, because writing the credentials is the adapter's job and
+      # deleting them is domely:unpair's.
+      - agent-tunnel:/var/lib/domely-tunnel:ro
+    restart: unless-stopped
+    # cloudflared drains its connections, and the credentials poll sits between a signal and the
+    # shell that forwards it, so this needs longer than the two services above.
+    stop_grace_period: 15s
+
+# The tunnel routes the api service and nothing else. Its ingress lives on Cloudflare's side
+# (config_src=cloudflare, #34), where this stack holds no credential that could rewrite it, and it
+# is allow-list shaped: one rule for this home's hostname ending in a 404 catch-all, so Home
+# Assistant and everything else are excluded by construction rather than by remembering to exclude
+# them. Three paths on the hostname are refused ahead of the rule that serves: GET /health, which
+# answers without a token by design and reports this home's liveness and grant version, /internal,
+# the adapter's push into the API layer, which is authenticated by ADAPTER_SECRET and has no
+# outside caller, and /ingress, the page Home Assistant's sidebar opens in the add-on topology,
+# which is admitted by where the connection came from rather than by a token (ADR-0010). One cloud
+# writes the same ingress for both topologies, so the rule is here too, and here it refuses a route
+# that would have refused the caller itself. See docs/remote-access.md.
+
+volumes:
+  # The SQLite file both processes use: the adapter writes the state mirror, the API reads it and
+  # owns the publish configuration. The tunnel never mounts it.
+  agent-data:
+  # The tunnel credentials on their own, so TUNNEL_CREDENTIALS_PATH is the only thing the tunnel
+  # container can reach. Written by the adapter at pairing, deleted by domely:unpair.
+  agent-tunnel:
