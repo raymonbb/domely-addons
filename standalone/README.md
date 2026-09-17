@@ -101,6 +101,11 @@ state as it always has and serves nothing publicly. Set it, start the stack, and
 a pairing code in the log for an administrator to redeem in the app. `CORS_ORIGINS` has to name the
 same cloud or the app gets nothing back from this Agent, for the reason below.
 
+After pairing, the app proposes the house: every lamp, switch and thermostat Home Assistant already
+has an area for, read straight from the mirror and grouped by that area, ticked and ready to publish
+in one tap. Nothing is published until the administrator confirms it, and a candidate Home Assistant
+placed in no area is offered too, unticked, under a group of its own.
+
 ## Three services and two volumes
 
 | Service | What it is | Exposed |
@@ -131,7 +136,16 @@ storage.
 
 The rest of what the API layer gained in M4 has defaults that are right for a house and is
 documented in `.env.example`: `EVENTS_RETENTION` and the three `EVENT_STREAM_*` values, which the
-adapter's side of the push (`API_URL`, `EVENT_PUSH_TIMEOUT_MS`) feeds.
+adapter's side of the push (`API_URL`, `EVENT_PUSH_TIMEOUT_MS`) feeds. `AUTOMATION_CAP` joined them
+in M9, on the same terms: a default that is right for a house, documented there, and reaching the
+container because it is documented as tunable.
+
+**`API_URL` is more than the push's address since M9.** An automation's action goes to the API
+layer through it too, because the engine runs in the adapter and deliberately does not call Home
+Assistant itself ([ADR-0019](../../docs/adr/0019-the-automation-engine.md)). So a blank one is not
+a dropped state change that the next read repairs: no automation can act at all, and a house that
+quietly does none of what its owner was told it would is the failure worth reading the log for. The
+adapter says so on every attempt rather than once at startup.
 
 Loopback is deliberate. Every API route except `/health` requires a valid JWT, with no bypass in
 any environment, and the way in from outside is the tunnel rather than a published port.
@@ -144,9 +158,9 @@ credential that could rewrite it, and it is allow-list shaped: one rule for this
 ending in a catch-all that refuses. Home Assistant and everything else are excluded by
 construction rather than by someone remembering to exclude them. Three paths on this home's own
 hostname are refused ahead of the rule that serves: `GET /health`, because it answers without a
-token by design; `/internal`, the adapter's push into the API layer, which the shared secret
-authenticates and no caller outside this stack has any business reaching; and `/ingress`, the page
-Home Assistant's sidebar opens in the other topology, which is admitted by where the connection
+token by design; `/internal`, both directions the adapter and the API layer speak over, which the
+shared secret authenticates and no caller outside this stack has any business reaching; and
+`/ingress`, the page Home Assistant's sidebar opens in the other topology, which is admitted by where the connection
 came from rather than by a token ([ADR-0010](../../docs/adr/0010-ingress-is-a-deep-link.md)). One
 cloud writes the same ingress for both topologies, so that third rule is here too, refusing a route
 that would have refused the caller itself.
@@ -337,9 +351,9 @@ once needs a builder that is not the default one, and is what the release pipeli
 
 ```bash
 docker buildx create --name domely --driver docker-container --use
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-adapter:0.1.0 agent/adapter
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-api:0.1.0 agent/api
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-tunnel:0.1.0 agent/tunnel
+docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-adapter:0.1.1 agent/adapter
+docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-api:0.1.1 agent/api
+docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-tunnel:0.1.1 agent/tunnel
 ```
 
 Those are run from the repository root, and without `--push` they build and go nowhere, which is

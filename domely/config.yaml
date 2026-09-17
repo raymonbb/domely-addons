@@ -7,7 +7,7 @@ name: Domely
 # For an add-on the version is the image tag, and bumping it is what a user sees as an update. The
 # repository root's VERSION file is the single source and deploy/addon/test.sh fails the build when
 # this line, VERSION, both changelogs and the image tags in deploy/standalone drift apart.
-version: "0.1.0"
+version: "0.1.1"
 slug: domely
 description: Share a simple, premium app for your home with the people who live in it
 url: https://github.com/raymonbb/domely-addons

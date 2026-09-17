@@ -6,10 +6,28 @@ this file is the add-on's half of it, in the same [Keep a
 Changelog](https://keepachangelog.com/en/1.1.0/) shape. `test.sh` fails the build when the two top
 entries and `config.yaml` disagree.
 
-## [0.1.0] - unreleased
+## [0.1.1] - 2026-09-17
 
-The first release. Not published yet: no image has been pushed and no tag has been cut, so this
-add-on cannot be installed from the store until one is. The date lands here when it is.
+### Added
+
+- The sidebar's pairing page shows the code large enough to read from across the room, says how
+  long it is still good for, and its button opens the app with the code already in the field.
+- The house Home Assistant already knows, offered in one pass: rooms and the devices in them, each
+  with a sensible suggestion of what your housemates may do with it, published in one confirmation
+  instead of built up by hand.
+- "Alle lampen uit" as a quick action on the home screen, which switches off every lamp you shared.
+- Automations that run in this house rather than in the cloud. Domely stores them here, and the
+  engine that runs them reaches only the devices you published, and only the things those devices
+  can really do. What they did is kept here as well and is readable in the app.
+- One notification, sent by the house itself and never by Domely Cloud: when your roof has been
+  giving power away long enough to be worth doing something about, your phone is told, with
+  something to do attached. It reads what Domely has already mirrored, so it costs Home Assistant
+  nothing.
+
+## [0.1.0] - 2026-08-31
+
+The first release. Add [raymonbb/domely-addons](https://github.com/raymonbb/domely-addons) as a
+repository in the add-on store and Domely appears there.
 
 ### Added
 

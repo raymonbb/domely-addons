@@ -13,7 +13,7 @@
 
 services:
   adapter:
-    image: ghcr.io/raymonbb/domely-adapter:0.1.0
+    image: ghcr.io/raymonbb/domely-adapter:0.1.1
     env_file: .env
     environment:
       # Reachable by service name from the API container, which is what this topology needs, and
@@ -27,7 +27,7 @@ services:
     stop_grace_period: 5s
 
   api:
-    image: ghcr.io/raymonbb/domely-api:0.1.0
+    image: ghcr.io/raymonbb/domely-api:0.1.1
     environment:
       # One thread is held per open event-stream connection from M4 onwards. See ADR-0005.
       FRANKENPHP_CONFIG: num_threads ${API_THREADS:-8}
@@ -49,6 +49,8 @@ services:
       # Seconds of clock skew allowed on a token. Documented as tunable, so it has to actually
       # reach the container that reads it.
       JWT_LEEWAY: ${JWT_LEEWAY:-60}
+      # How many automations this home may hold (ADR-0019), refused at the write past it.
+      AUTOMATION_CAP: ${AUTOMATION_CAP:-50}
       # The events table and the streams that tail it (ADR-0008). All four are documented as
       # tunable, so they have to actually reach the container that reads them, and the lifetime
       # is sized together with the thread count: one thread is held per open stream.
@@ -71,7 +73,7 @@ services:
     stop_grace_period: 5s
 
   tunnel:
-    image: ghcr.io/raymonbb/domely-tunnel:0.1.0
+    image: ghcr.io/raymonbb/domely-tunnel:0.1.1
     # The API container's network namespace, so cloudflared reaches the API layer at
     # 127.0.0.1:8080: the same address it has in the add-on, where the two run in one container.
     # One cloud provisions the ingress for both topologies from one CLOUD_TUNNEL_SERVICE, so that

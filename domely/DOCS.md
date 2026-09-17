@@ -36,6 +36,11 @@ The code expires, and the add-on asks for a new one and prints that instead. An 
 already paired never prints a code again: pairing once is deliberate, and re-pairing is something
 you ask for rather than something that can happen by accident.
 
+Open the app after that and it proposes the house: every lamp, switch and thermostat Home Assistant
+already has an area for, grouped by that area, ticked and ready to publish in one tap. Nothing is
+published until you confirm it, and a lamp Home Assistant placed nowhere is offered too, unticked,
+under its own group.
+
 ## Options
 
 | Option | What it does |
