@@ -8,7 +8,7 @@ which ones. Everything else in Home Assistant stays yours.
 
 - **A Domely Cloud account.** Domely is two halves: this add-on at your house, and an account that
   holds who you are, who you shared with, and the address your home is reachable at. Create the
-  account first, in the app, at the address you are going to put in `cloud_url` below.
+  account first, in the app, at the address already filled in under `cloud_url`.
 - **Nothing else.** No port forwarding, no reverse proxy, no certificate, no long-lived access
   token. The add-on reaches Home Assistant through the supervisor, with a token the supervisor
   hands it, and reaches the outside world through an outbound tunnel Domely Cloud provisions.
@@ -45,7 +45,7 @@ under its own group.
 
 | Option | What it does |
 | --- | --- |
-| `cloud_url` | The Domely Cloud you have an account with, including `https://`. Required. |
+| `cloud_url` | The Domely Cloud you have an account with, including `https://`. Filled in with Domely's own; change it only if you run a cloud of your own. |
 | `home_name` | What the app calls this home. Empty means Home. |
 | `log_level` | `debug`, `info`, `warn` or `error`. `debug` logs every state change Home Assistant sends, which is a lot. |
 | `test_light_entity` | A light the add-on switches on and off once at startup to prove it can control Home Assistant. Empty skips the test. |
@@ -148,7 +148,8 @@ the home refusing the question. Check `cors_origins`: empty means the address in
 if you serve the app from somewhere else, that address has to be named here.
 
 **Nothing at all in the log.** Check the Configuration tab first. The supervisor refuses to start an
-add-on whose options do not match its schema, and `cloud_url` is required.
+add-on whose options do not match its schema, and `cloud_url` has to be an address with `https://`
+in front of it.
 
 ## License
 

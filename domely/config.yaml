@@ -7,7 +7,7 @@ name: Domely
 # For an add-on the version is the image tag, and bumping it is what a user sees as an update. The
 # repository root's VERSION file is the single source and deploy/addon/test.sh fails the build when
 # this line, VERSION, both changelogs and the image tags in deploy/standalone drift apart.
-version: "0.1.1"
+version: "0.1.2"
 slug: domely
 description: Share a simple, premium app for your home with the people who live in it
 url: https://github.com/raymonbb/domely-addons
@@ -71,10 +71,14 @@ timeout: 20
 # it cannot be got wrong: the paths under /data, the loopback addresses the two halves of the
 # internal channel meet on, and the shared secret, which is generated on first start.
 options:
+  # Domely's own cloud, where the accounts are. Filled in rather than left empty because a required
+  # blank is a question nobody installing from the store can answer, and every one of them would
+  # answer it with this. It stays an option: the cloud is a deployment like any other, so somebody
+  # running their own puts its address here instead.
+  cloud_url: https://app.domely.nl
   log_level: info
   api_threads: 8
 schema:
-  # Required, and with no default here on purpose: a hostname belongs in nobody's repository.
   cloud_url: str
   home_name: str?
   log_level: list(debug|info|warn|error)

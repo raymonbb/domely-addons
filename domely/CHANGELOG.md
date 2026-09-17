@@ -6,6 +6,21 @@ this file is the add-on's half of it, in the same [Keep a
 Changelog](https://keepachangelog.com/en/1.1.0/) shape. `test.sh` fails the build when the two top
 entries and `config.yaml` disagree.
 
+## Unreleased
+
+## [0.1.2] - 2026-09-17
+
+### Added
+
+- Domely can ask this house to send a test notification, so somebody can watch one arrive instead
+  of waiting for the sun. It goes to every phone and browser in the household that turned
+  notifications on, and it does not use up the one notification a day about spare power.
+
+### Changed
+
+- The Domely Cloud address is filled in for you. Leave it as it is unless you run a Domely Cloud
+  of your own.
+
 ## [0.1.1] - 2026-09-17
 
 ### Added
