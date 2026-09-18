@@ -8,6 +8,14 @@ entries and `config.yaml` disagree.
 
 ## Unreleased
 
+## [0.1.4] - 2026-09-18
+
+### Added
+
+- This house tells Domely which version of each of its three parts it is running, on the calls it
+  already makes. It is what makes "which version are you on" answerable without asking you to go
+  and look. Nothing about your house or the people in it travels with it.
+
 ## [0.1.3] - 2026-09-18
 
 ### Added

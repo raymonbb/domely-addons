@@ -351,13 +351,14 @@ once needs a builder that is not the default one, and is what the release pipeli
 
 ```bash
 docker buildx create --name domely --driver docker-container --use
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-adapter:0.1.3 agent/adapter
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-api:0.1.3 agent/api
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/raymonbb/domely-tunnel:0.1.3 agent/tunnel
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.4 -t ghcr.io/raymonbb/domely-adapter:0.1.4 agent/adapter
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.4 -t ghcr.io/raymonbb/domely-api:0.1.4 agent/api
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.4 -t ghcr.io/raymonbb/domely-tunnel:0.1.4 agent/tunnel
 ```
 
 Those are run from the repository root, and without `--push` they build and go nowhere, which is
-the only form of them this milestone has run.
+the only form of them this milestone has run. The build argument is what the container answers
+with when asked which release it is (#322); leaving it out builds an image that says `dev`.
 
 ## Status
 
