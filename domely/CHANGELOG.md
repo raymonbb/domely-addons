@@ -8,6 +8,15 @@ entries and `config.yaml` disagree.
 
 ## Unreleased
 
+## [0.1.3] - 2026-09-18
+
+### Added
+
+- Lamps that can change colour can be asked to. Tick "Kleur veranderen" when you share the lamp, or
+  press Aanzetten on the line that says the lamp can do more than it was shared with, and a colour
+  picker appears on its card in the app. A lamp that only runs warm to cold white is not offered
+  one, because there is no colour in it to pick.
+
 ## [0.1.2] - 2026-09-17
 
 ### Added
