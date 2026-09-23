@@ -8,6 +8,39 @@ entries and `config.yaml` disagree.
 
 ## Unreleased
 
+## [0.1.6] - 2026-09-23
+
+### Added
+
+- A house whose grid is one signed P1 number now also gets the notification that it is giving
+  power away.
+
+### Changed
+
+- A room you rename in Home Assistant, or a device you move to another one, reaches Domely within
+  the second. Until now it waited for the next time Home Assistant restarted, and nothing said so.
+- The house tells you which modes a climate device actually has, so a room's card no longer offers
+  one it does not, such as "Ontvochtigen" on an air conditioner that cannot dry. A device published
+  before this ships keeps offering the full list until you republish it.
+- A room or a device can no longer be given a name shaped like a Home Assistant entity id, and
+  neither can a room the one-tap setup creates. Nothing already named that way is touched.
+- `domely:channel-check` tells an adapter address that does not resolve apart from one that has not
+  started yet, instead of one line that reads as a wait either way.
+
+### Fixed
+
+- A lamp or a socket that your energy dashboard happens to name is offered as a lamp or a socket
+  when you publish it, instead of as an energy meter.
+- When a command cannot reach the part of Domely that talks to Home Assistant, the add-on log says
+  what went wrong and which address it tried, instead of one sentence that fits every cause.
+- A counter and a power sensor carrying the same energy role, such as a P1's import counter and its
+  own import power sensor, are no longer added together in what the house reports for insights.
+- The automation engine advances its minute counter only after the work that depends on it, closing
+  a narrow window where a failure between two reads in the same tick could fire an automation
+  twice.
+- Beheer, open in your browser, now hears when you rename a room or move a device in Home
+  Assistant, instead of only catching up the next time you reload the page.
+
 ## [0.1.5] - 2026-09-23
 
 ### Added
