@@ -351,9 +351,9 @@ once needs a builder that is not the default one, and is what the release pipeli
 
 ```bash
 docker buildx create --name domely --driver docker-container --use
-docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.4 -t ghcr.io/raymonbb/domely-adapter:0.1.4 agent/adapter
-docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.4 -t ghcr.io/raymonbb/domely-api:0.1.4 agent/api
-docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.4 -t ghcr.io/raymonbb/domely-tunnel:0.1.4 agent/tunnel
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.5 -t ghcr.io/raymonbb/domely-adapter:0.1.5 agent/adapter
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.5 -t ghcr.io/raymonbb/domely-api:0.1.5 agent/api
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_VERSION=0.1.5 -t ghcr.io/raymonbb/domely-tunnel:0.1.5 agent/tunnel
 ```
 
 Those are run from the repository root, and without `--push` they build and go nowhere, which is

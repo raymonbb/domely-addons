@@ -40,7 +40,7 @@ published image, which is how add-ons are meant to ship anyway.
 | `apparmor.txt` | The profile the supervisor loads, named for the slug |
 | `translations/en.yaml` | The name and help text of every option |
 | `test.sh` | What `make test` runs over all of the above |
-| `generate-images.mjs` | Draws `icon.png` and `logo.png`, committed beside it |
+| `generate-images.mjs` | Rasterises `icon.png` and `logo.png` from `design/icons`, committed beside it |
 
 `test.sh` is the only thing here that can be checked without a Home Assistant to install into, so
 it checks the mistakes that would otherwise be found on somebody's hardware: a manifest key the

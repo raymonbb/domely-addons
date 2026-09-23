@@ -8,6 +8,24 @@ entries and `config.yaml` disagree.
 
 ## Unreleased
 
+## [0.1.5] - 2026-09-23
+
+### Added
+
+- The home screen is yours to compose. The house keeps the layout, everybody in it sees what you
+  put there, and each of them only the devices they may reach. It also knows the new blocks: what
+  needs attention, what is on, and today.
+- A P1 that reports the grid as one number, negative while you give back, can be published as the
+  grid. Home Assistant's own grid power sensor is suggested as that, and so is the P1's live power
+  when the energy dashboard only knows its counters.
+- The house tells the app which of its devices are one physical thing, so an air conditioner's
+  display light and jet mode are shown with the air conditioner.
+
+### Changed
+
+- Domely's own logo, in the add-on list and on its page, instead of the placeholder square and the
+  word spelled out in pixels.
+
 ## [0.1.4] - 2026-09-18
 
 ### Added
