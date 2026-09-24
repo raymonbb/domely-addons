@@ -8,6 +8,15 @@ entries and `config.yaml` disagree.
 
 ## Unreleased
 
+## [0.1.7] - 2026-09-24
+
+### Fixed
+
+- A thermostat is refused a mode it does not have before the command reaches Home Assistant.
+- Unpairing while the add-on is syncing with Domely Cloud no longer logs an error, and no longer
+  leaves the old home's access behind.
+- Notifications reach only the phones of people who still have access to the home.
+
 ## [0.1.6] - 2026-09-23
 
 ### Added
