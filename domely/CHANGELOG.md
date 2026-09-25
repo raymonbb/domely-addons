@@ -8,6 +8,13 @@ entries and `config.yaml` disagree.
 
 ## Unreleased
 
+## [0.1.8] - 2026-09-25
+
+### Added
+
+- A device can be set to "Alleen zien": your housemates see it and cannot switch it, you still can.
+- Home can hold small blocks, a quarter of the width, and a block for one room.
+
 ## [0.1.7] - 2026-09-24
 
 ### Fixed
